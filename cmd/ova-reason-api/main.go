@@ -2,12 +2,25 @@ package main
 
 import (
 	"fmt"
+	"github.com/ozonva/ova-reason-api/internal/model"
 	"github.com/ozonva/ova-reason-api/internal/utils"
 	"os"
 	"time"
 )
 
 func main() {
+
+	//Task B
+	s := model.Reason{
+		Id:       1,
+		UserId:   2,
+		ActionId: 3,
+		Why:      "qqq",
+	}
+
+	fmt.Println(s.String())
+
+	//Task A
 	for {
 		newConf := readConfig()
 		fmt.Printf("Current config: %d\n", newConf)
