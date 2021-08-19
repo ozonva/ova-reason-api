@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/ozonva/ova-reason-api/internal/model"
 	"github.com/ozonva/ova-reason-api/internal/utils"
@@ -20,25 +21,28 @@ func main() {
 	task3A()
 }
 
-func readConfig() int {
+func readConfig() (int, error) {
 	file, err := os.Open("config.txt")
 	if err != nil { // если возникла ошибка
-		fmt.Println("Unable to open file config.txt: ", err)
-		os.Exit(1) // выходим из программы
+		return 0, errors.New("Unable to open file config.txt: " + err.Error())
 	}
 	defer file.Close()
 
 	var myConf int
 	fmt.Fscanf(file, "%d", &myConf)
 
-	return myConf
+	return myConf, nil
 }
 
 func task3A() {
 	fmt.Println("Task 3A")
 	for {
-		newConf := readConfig()
-		fmt.Printf("Current config: %d\n", newConf)
+		newConf, error := readConfig()
+		if error == nil {
+			fmt.Printf("Current config: %d\n", newConf)
+		} else {
+			fmt.Println(error.Error())
+		}
 
 		time.Sleep(5 * time.Second)
 	}
@@ -60,6 +64,13 @@ func task3C() {
 
 	for _, reason := range reasonMap {
 		fmt.Println(reason.String())
+	}
+
+	bulks := utils.SplitToBulks(slice, 2)
+	for i := range bulks {
+		for j := range bulks[i] {
+			fmt.Printf("result[%d][%d] = %s\n", i, j, bulks[i][j].String())
+		}
 	}
 
 }

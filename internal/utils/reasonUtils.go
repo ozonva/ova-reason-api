@@ -7,17 +7,28 @@ import (
 
 func SplitToBulks(reasons []model.Reason, batchSize int) [][]model.Reason {
 
-	result := make([][]model.Reason, 0, len(reasons)/batchSize+1)
-	var batch []model.Reason
-	for index, item := range reasons {
-		batch = append(batch, item)
+	resultLen := calcBulksCnt(len(reasons), batchSize)
+	result := make([][]model.Reason, 0, resultLen)
 
-		if len(batch) == batchSize || index == len(reasons)-1 {
-			result = append(result, batch)
-			batch = nil
+	for i := 0; i < resultLen; i++ {
+		startInd := i * batchSize
+		endInd := (i + 1) * batchSize
+		if endInd > len(reasons) {
+			endInd = len(reasons)
 		}
+		result = append(result, reasons[startInd:endInd])
 	}
 
+	return result
+}
+
+func calcBulksCnt(arrayLen int, batchSize int) int {
+	result := 0
+	if arrayLen%batchSize == 0 {
+		result = arrayLen / batchSize
+	} else {
+		result = arrayLen/batchSize + 1
+	}
 	return result
 }
 
