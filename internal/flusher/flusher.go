@@ -3,6 +3,7 @@ package flusher
 import (
 	"github.com/ozonva/ova-reason-api/internal/model"
 	"github.com/ozonva/ova-reason-api/internal/repo"
+	"github.com/ozonva/ova-reason-api/internal/utils"
 )
 
 // Flusher - интерфейс для сброса задач в хранилище
@@ -24,5 +25,16 @@ type flusher struct {
 }
 
 func (f flusher) Flush(entities []model.Reason) []model.Reason {
-	return entities
+
+	var problems []model.Reason
+	bulks := utils.SplitToBulks(entities, f.chunkSize)
+	for _, bulk := range bulks {
+		err := f.repo.AddEntities(bulk)
+		if err != nil {
+			problems = append(problems, bulk...)
+		}
+
+	}
+
+	return problems
 }
