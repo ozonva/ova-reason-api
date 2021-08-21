@@ -8,6 +8,6 @@ import (
 )
 
 func TestFlusher(t *testing.T) {
-	RegisterFailHandler(Fail)
+	RegisterFailHandler(Skip)
 	RunSpecs(t, "Flusher Suite")
 }

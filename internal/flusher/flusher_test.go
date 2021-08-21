@@ -41,12 +41,12 @@ var _ = Describe("Flusher", func() {
 		Context("With no error", func() {
 			gomock.InOrder(
 				mockRepo.EXPECT().AddEntities(gomock.Len(2)).Return(nil),
-				//mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
-				//mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
+				mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
+				mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
 			)
 			It("should return null", func() {
 				result := flusherObj.Flush(reasons)
-				Expect(result).To(BeNil())
+				Expect(result).Should(BeNil())
 			})
 		})
 
@@ -56,11 +56,11 @@ var _ = Describe("Flusher", func() {
 				mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
 				mockRepo.EXPECT().AddEntities(gomock.Any()).Return(errors.New("no enough space")),
 			)
-			It("should return null", func() {
+			It("should return the last entity", func() {
 				result := flusherObj.Flush(reasons)
 				Expect(result).ToNot(BeNil())
 				Expect(len(result)).To(Equal(1))
-				Expect(result[0]).To(Equal(reasons[5]))
+				Expect(result[0]).To(Equal(reasons[4]))
 
 			})
 		})
