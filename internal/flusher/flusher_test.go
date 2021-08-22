@@ -23,7 +23,6 @@ var _ = Describe("Flusher", func() {
 		ctrl = gomock.NewController(GinkgoT())
 		mockRepo = mocks.NewMockRepo(ctrl)
 
-		flusherObj = flusher.NewFlusher(2, mockRepo)
 		reasons = []model.Reason{
 			*model.New(1, 1, 1, "forgot keys"),
 			*model.New(5, 5, 5, "lost my wallet"),
@@ -37,9 +36,12 @@ var _ = Describe("Flusher", func() {
 		ctrl.Finish()
 	})
 
-	Describe("Flushing slice of reasons into base", func() {
+	Describe("Flushing slice of reasons into base using chunks", func() {
+		BeforeEach(func() {
+			flusherObj = flusher.NewFlusher(2, mockRepo)
+		})
 		Context("With no error", func() {
-			
+
 			It("should return null", func() {
 				gomock.InOrder(
 					mockRepo.EXPECT().AddEntities(gomock.Len(2)).Return(nil),
@@ -52,7 +54,7 @@ var _ = Describe("Flusher", func() {
 		})
 
 		Context("With errors", func() {
-			
+
 			It("should return the last entity", func() {
 				gomock.InOrder(
 					mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
@@ -63,6 +65,40 @@ var _ = Describe("Flusher", func() {
 				Expect(result).ToNot(BeNil())
 				Expect(len(result)).To(Equal(1))
 				Expect(result[0]).To(Equal(reasons[4]))
+
+			})
+		})
+	})
+
+	Describe("Flushing slice of reasons into base one by one", func() {
+		BeforeEach(func() {
+			flusherObj = flusher.NewFlusher(1, mockRepo)
+		})
+		Context("With no error", func() {
+
+			It("should return null", func() {
+
+				mockRepo.EXPECT().AddEntities(gomock.Len(1)).Return(nil).Times(5)
+
+				result := flusherObj.Flush(reasons)
+				Expect(result).Should(BeNil())
+			})
+		})
+
+		Context("With errors", func() {
+
+			It("should return the third entity", func() {
+				gomock.InOrder(
+					mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
+					mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
+					mockRepo.EXPECT().AddEntities(gomock.Any()).Return(errors.New("duplicated keys")),
+					mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
+					mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
+				)
+				result := flusherObj.Flush(reasons)
+				Expect(result).ToNot(BeNil())
+				Expect(len(result)).To(Equal(1))
+				Expect(result[0]).To(Equal(reasons[2]))
 
 			})
 		})
