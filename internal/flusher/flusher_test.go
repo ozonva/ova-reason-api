@@ -39,26 +39,24 @@ var _ = Describe("Flusher", func() {
 
 	Describe("Flushing slice of reasons into base", func() {
 		Context("With no error", func() {
-
+			gomock.InOrder(
+				mockRepo.EXPECT().AddEntities(gomock.Len(2)).Return(nil),
+				mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
+				mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
+			)
 			It("should return null", func() {
-				gomock.InOrder(
-					mockRepo.EXPECT().AddEntities(gomock.Len(2)).Return(nil),
-					mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
-					mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
-				)
 				result := flusherObj.Flush(reasons)
 				Expect(result).Should(BeNil())
 			})
 		})
 
 		Context("With errors", func() {
-
+			gomock.InOrder(
+				mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
+				mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
+				mockRepo.EXPECT().AddEntities(gomock.Any()).Return(errors.New("no enough space")),
+			)
 			It("should return the last entity", func() {
-				gomock.InOrder(
-					mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
-					mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil),
-					mockRepo.EXPECT().AddEntities(gomock.Any()).Return(errors.New("no enough space")),
-				)
 				result := flusherObj.Flush(reasons)
 				Expect(result).ToNot(BeNil())
 				Expect(len(result)).To(Equal(1))
