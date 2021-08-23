@@ -11,7 +11,6 @@ import (
 
 type Saver interface {
 	Save(entity model.Reason) // заменить на свою сущность
-	// Init()
 	Close()
 }
 
@@ -39,14 +38,14 @@ type saver struct {
 
 func (s *saver) Save(entity model.Reason) {
 	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.tempStorage = append(s.tempStorage, entity)
-	s.mu.Unlock()
+
 }
 
 func (s *saver) Close() {
 
 	s.flush()
-
 	fmt.Println("TotalCnt= " + strconv.Itoa(s.totalCnt))
 }
 
@@ -54,7 +53,6 @@ func (s *saver) flush() {
 
 	s.mu.Lock()
 	whatToFlush := s.tempStorage
-	time.Sleep(time.Millisecond * 500)
 	s.tempStorage = make([]model.Reason, 0, s.capacity)
 	s.mu.Unlock()
 
@@ -72,7 +70,7 @@ func (s *saver) flush() {
 func (s *saver) flushByTimeout() {
 
 	for {
-		time.Sleep(5 * time.Second)
+		time.Sleep(4 * time.Second)
 		go s.flush()
 	}
 
