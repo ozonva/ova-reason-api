@@ -6,6 +6,8 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/ozonva/ova-reason-api/internal/flusher"
 	"github.com/ozonva/ova-reason-api/internal/saver"
+	"math/rand"
+	"sync"
 	"time"
 
 	"github.com/ozonva/ova-reason-api/internal/mocks"
@@ -161,6 +163,46 @@ var _ = Describe("Saver", func() {
 			//after Sleep
 			Expect(counter).Should(Equal(len(reasons)))
 		})
+	})
+
+	Describe("Using many goroutines", func() {
+		BeforeEach(func() {
+			flusherObj = flusher.NewFlusher(2, mockRepo)
+			saverObj = saver.NewSaver(1, flusherObj)
+		})
+
+		It("Saving after Close", func() {
+			savedCounter := 0
+			goroutineNumber := 5
+			goroutineLoad := 10
+
+			mockRepo.EXPECT().AddEntities(gomock.Any()).DoAndReturn(func(arg []model.Reason) interface{} {
+				savedCounter += len(arg)
+				return nil
+			}).AnyTimes()
+
+			wg := sync.WaitGroup{}
+
+			for i := 0; i < goroutineNumber; i++ {
+				wg.Add(1)
+				go func() {
+					timeout := rand.Int31n(2000)
+					for i := 0; i < goroutineLoad; i++ {
+						time.Sleep(time.Millisecond * time.Duration(timeout))
+						saverObj.Save(*model.New(1, 1, 1, "because"))
+					}
+					wg.Done()
+
+				}()
+			}
+
+			wg.Wait()
+			saverObj.Close()
+
+			//after Close
+			Expect(savedCounter).Should(Equal(goroutineNumber * goroutineLoad))
+		})
+
 	})
 
 })

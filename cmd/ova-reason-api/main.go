@@ -29,7 +29,7 @@ func main() {
 
 	flusherObj = flusher.NewFlusher(2, mockRepo)
 
-	mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil).Times(100000) //.Do(func() { fmt.})
+	mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil).Times(100000)
 
 	saverObj = saver.NewSaver(5, flusherObj)
 	wg := sync.WaitGroup{}
@@ -38,7 +38,6 @@ func main() {
 	go runGenerator("goroutine1", 1000, saverObj, &wg)
 	go runGenerator("goroutine2", 1500, saverObj, &wg)
 	go runGenerator("goroutine3", 1800, saverObj, &wg)
-	time.Sleep(20 * time.Second)
 
 	wg.Wait()
 	saverObj.Close()
