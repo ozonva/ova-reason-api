@@ -8,6 +8,7 @@ import (
 	"github.com/ozonva/ova-reason-api/internal/model"
 	"github.com/ozonva/ova-reason-api/internal/saver"
 	"strconv"
+	"sync"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -31,22 +32,27 @@ func main() {
 	mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil).Times(100000) //.Do(func() { fmt.})
 
 	saverObj = saver.NewSaver(5, flusherObj)
+	wg := sync.WaitGroup{}
+	wg.Add(3)
 
-	go runGenerator("goroutine1", 1000, saverObj)
-	go runGenerator("goroutine2", 1500, saverObj)
-	go runGenerator("goroutine3", 1800, saverObj)
+	go runGenerator("goroutine1", 1000, saverObj, &wg)
+	go runGenerator("goroutine2", 1500, saverObj, &wg)
+	go runGenerator("goroutine3", 1800, saverObj, &wg)
 	time.Sleep(20 * time.Second)
 
+	wg.Wait()
 	saverObj.Close()
 
 }
 
-func runGenerator(id string, timeout int, saverObj saver.Saver) {
+func runGenerator(id string, timeout int, saverObj saver.Saver, wg *sync.WaitGroup) {
 	cnt := 0
-	for {
+	for i := 0; i < 10; i++ {
 		time.Sleep(time.Millisecond * time.Duration(timeout))
 		cnt++
 		newReason := *model.New(1, 1, 1, id+" "+strconv.Itoa(cnt))
 		saverObj.Save(newReason)
+
 	}
+	wg.Done()
 }
