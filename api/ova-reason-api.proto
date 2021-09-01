@@ -6,7 +6,7 @@ option go_package = "github.com/ozonva/ova-reason-api/pkg/ova-reason-api;ova_rea
 import "google/protobuf/empty.proto";
 
 service ReasonRpc {
-  rpc CreateReason (CreateReasonRequest) returns (CreateReasonResponce);
+  rpc CreateReason (CreateReasonRequest) returns (CreateReasonResponse);
   rpc DescribeReason (DescribeReasonRequest) returns (DescribeReasonResponse);
   rpc ListReasons (google.protobuf.Empty) returns (ListReasonsResponse);
   rpc RemoveReason (RemoveReasonRequest) returns (google.protobuf.Empty);
