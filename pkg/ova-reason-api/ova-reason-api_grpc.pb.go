@@ -4,10 +4,10 @@ package ova_reason_api
 
 import (
 	context "context"
+	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -21,8 +21,8 @@ const _ = grpc.SupportPackageIsVersion7
 type ReasonRpcClient interface {
 	CreateReason(ctx context.Context, in *CreateReasonRequest, opts ...grpc.CallOption) (*CreateReasonResponse, error)
 	DescribeReason(ctx context.Context, in *DescribeReasonRequest, opts ...grpc.CallOption) (*DescribeReasonResponse, error)
-	ListReasons(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListReasonsResponse, error)
-	RemoveReason(ctx context.Context, in *RemoveReasonRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ListReasons(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListReasonsResponse, error)
+	RemoveReason(ctx context.Context, in *RemoveReasonRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type reasonRpcClient struct {
@@ -51,7 +51,7 @@ func (c *reasonRpcClient) DescribeReason(ctx context.Context, in *DescribeReason
 	return out, nil
 }
 
-func (c *reasonRpcClient) ListReasons(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ListReasonsResponse, error) {
+func (c *reasonRpcClient) ListReasons(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListReasonsResponse, error) {
 	out := new(ListReasonsResponse)
 	err := c.cc.Invoke(ctx, "/ova.reason.api.ReasonRpc/ListReasons", in, out, opts...)
 	if err != nil {
@@ -60,8 +60,8 @@ func (c *reasonRpcClient) ListReasons(ctx context.Context, in *emptypb.Empty, op
 	return out, nil
 }
 
-func (c *reasonRpcClient) RemoveReason(ctx context.Context, in *RemoveReasonRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *reasonRpcClient) RemoveReason(ctx context.Context, in *RemoveReasonRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
 	err := c.cc.Invoke(ctx, "/ova.reason.api.ReasonRpc/RemoveReason", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -75,8 +75,8 @@ func (c *reasonRpcClient) RemoveReason(ctx context.Context, in *RemoveReasonRequ
 type ReasonRpcServer interface {
 	CreateReason(context.Context, *CreateReasonRequest) (*CreateReasonResponse, error)
 	DescribeReason(context.Context, *DescribeReasonRequest) (*DescribeReasonResponse, error)
-	ListReasons(context.Context, *emptypb.Empty) (*ListReasonsResponse, error)
-	RemoveReason(context.Context, *RemoveReasonRequest) (*emptypb.Empty, error)
+	ListReasons(context.Context, *empty.Empty) (*ListReasonsResponse, error)
+	RemoveReason(context.Context, *RemoveReasonRequest) (*empty.Empty, error)
 	mustEmbedUnimplementedReasonRpcServer()
 }
 
@@ -90,10 +90,10 @@ func (UnimplementedReasonRpcServer) CreateReason(context.Context, *CreateReasonR
 func (UnimplementedReasonRpcServer) DescribeReason(context.Context, *DescribeReasonRequest) (*DescribeReasonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DescribeReason not implemented")
 }
-func (UnimplementedReasonRpcServer) ListReasons(context.Context, *emptypb.Empty) (*ListReasonsResponse, error) {
+func (UnimplementedReasonRpcServer) ListReasons(context.Context, *empty.Empty) (*ListReasonsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListReasons not implemented")
 }
-func (UnimplementedReasonRpcServer) RemoveReason(context.Context, *RemoveReasonRequest) (*emptypb.Empty, error) {
+func (UnimplementedReasonRpcServer) RemoveReason(context.Context, *RemoveReasonRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveReason not implemented")
 }
 func (UnimplementedReasonRpcServer) mustEmbedUnimplementedReasonRpcServer() {}
@@ -146,7 +146,7 @@ func _ReasonRpc_DescribeReason_Handler(srv interface{}, ctx context.Context, dec
 }
 
 func _ReasonRpc_ListReasons_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func _ReasonRpc_ListReasons_Handler(srv interface{}, ctx context.Context, dec fu
 		FullMethod: "/ova.reason.api.ReasonRpc/ListReasons",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ReasonRpcServer).ListReasons(ctx, req.(*emptypb.Empty))
+		return srv.(ReasonRpcServer).ListReasons(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
