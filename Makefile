@@ -36,3 +36,14 @@ generate_proto_wsl:
 			ova-reason-api.proto
 	mv pkg/ova-reason-api/github.com/ozonva/ova-reason-api/pkg/ova-reason-api/* pkg/ova-reason-api/
 	rm -rf pkg/ova-reason-api/github.com
+
+.PHONY: .install-go-deps
+.install-go-deps:
+	ls go.mod || go mod init github.com/ozonva/ova-reason-api
+    GOBIN=$(LOCAL_BIN) go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+    GOBIN=$(LOCAL_BIN) go get -u github.com/golang/protobuf/proto
+    GOBIN=$(LOCAL_BIN) go get -u github.com/golang/protobuf/protoc-gen-go
+    GOBIN=$(LOCAL_BIN) go get -u google.golang.org/grpc
+    GOBIN=$(LOCAL_BIN) go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
+    GOBIN=$(LOCAL_BIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
+    GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
