@@ -24,15 +24,15 @@ generate_proto:
 	move pkg\ova-reason-api\github.com\ozonva\ova-reason-api\pkg\ova-reason-api\* pkg\ova-reason-api\
 
 .PHONY: generate_proto_wsl
-generate_proto2:
+generate_proto_wsl:
 	mkdir -p pkg/ova-reason-api
-	protoc  \
+	protoc   -I vendor.protogen --proto_path=api \
 			--go_out=pkg/ova-reason-api --go_opt=paths=import \
 			--go-grpc_out=pkg/ova-reason-api --go-grpc_opt=paths=import \
 			--grpc-gateway_out=pkg/ova-reason-api \
             --grpc-gateway_opt=logtostderr=true \
             --grpc-gateway_opt=paths=import \
             --swagger_out=allow_merge=true,merge_file_name=api:swagger \
-			api/ova-reason-api.proto
+			ova-reason-api.proto
 	mv pkg/ova-reason-api/github.com/ozonva/ova-reason-api/pkg/ova-reason-api/* pkg/ova-reason-api/
 	rm -rf pkg/ova-reason-api/github.com

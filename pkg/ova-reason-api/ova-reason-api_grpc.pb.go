@@ -206,5 +206,5 @@ var ReasonRpc_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/ova-reason-api.proto",
+	Metadata: "ova-reason-api.proto",
 }

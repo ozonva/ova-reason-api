@@ -3,12 +3,17 @@ package ova.reason.api;
 
 option go_package = "github.com/ozonva/ova-reason-api/pkg/ova-reason-api;ova_reason_api";
 
+import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 
 service ReasonRpc {
   rpc CreateReason (CreateReasonRequest) returns (CreateReasonResponse);
   rpc DescribeReason (DescribeReasonRequest) returns (DescribeReasonResponse);
-  rpc ListReasons (google.protobuf.Empty) returns (ListReasonsResponse);
+  rpc ListReasons (google.protobuf.Empty) returns (ListReasonsResponse){
+    option (google.api.http) = {
+      get: "/reasons"
+    };
+  }
   rpc RemoveReason (RemoveReasonRequest) returns (google.protobuf.Empty);
 }
 
