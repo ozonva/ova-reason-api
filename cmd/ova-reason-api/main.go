@@ -1,57 +1,56 @@
 package main
 
 import (
-	"github.com/golang/mock/gomock"
-	. "github.com/onsi/gomega"
-	"github.com/ozonva/ova-reason-api/internal/flusher"
-	"github.com/ozonva/ova-reason-api/internal/mocks"
-	"github.com/ozonva/ova-reason-api/internal/model"
-	"github.com/ozonva/ova-reason-api/internal/saver"
-	"strconv"
-	"sync"
+	"context"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/ozonva/ova-reason-api/internal/server"
+	api "github.com/ozonva/ova-reason-api/pkg/ova-reason-api"
+	"github.com/rs/zerolog"
+	"google.golang.org/grpc"
+	"net"
+	"net/http"
+	"os"
 	"time"
+)
 
-	. "github.com/onsi/ginkgo"
+const (
+	grpcPort           = ":8080"
+	grpcServerEndpoint = "localhost:8080"
 )
 
 func main() {
 
-	var (
-		ctrl     *gomock.Controller
-		mockRepo *mocks.MockRepo
+	go runJSON()
+	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
+	log := zerolog.New(output).With().Timestamp().Logger()
+	listen, err := net.Listen("tcp", grpcPort)
+	if err != nil {
+		log.Fatal().Msgf("failed to listen: %v", err)
+	}
 
-		flusherObj flusher.Flusher
-		saverObj   saver.Saver
-	)
-	RegisterFailHandler(Fail)
-	ctrl = gomock.NewController(GinkgoT())
-	mockRepo = mocks.NewMockRepo(ctrl)
-
-	flusherObj = flusher.NewFlusher(2, mockRepo)
-
-	mockRepo.EXPECT().AddEntities(gomock.Any()).Return(nil).Times(100000)
-
-	saverObj = saver.NewSaver(5, flusherObj)
-	wg := sync.WaitGroup{}
-	wg.Add(3)
-
-	go runGenerator("goroutine1", 1000, saverObj, &wg)
-	go runGenerator("goroutine2", 1500, saverObj, &wg)
-	go runGenerator("goroutine3", 1800, saverObj, &wg)
-
-	wg.Wait()
-	saverObj.Close()
+	s := grpc.NewServer()
+	api.RegisterReasonRpcServer(s, server.NewReasonRpcServer(&log))
+	if err := s.Serve(listen); err != nil {
+		log.Fatal().Msgf("failed to serve: %v", err)
+	}
 
 }
 
-func runGenerator(id string, timeout int, saverObj saver.Saver, wg *sync.WaitGroup) {
-	cnt := 0
-	for i := 0; i < 10; i++ {
-		time.Sleep(time.Millisecond * time.Duration(timeout))
-		cnt++
-		newReason := *model.New(1, 1, 1, id+" "+strconv.Itoa(cnt))
-		saverObj.Save(newReason)
+func runJSON() {
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
+	mux := runtime.NewServeMux()
+	opts := []grpc.DialOption{grpc.WithInsecure()}
+
+	err := api.RegisterReasonRpcHandlerFromEndpoint(ctx, mux, grpcServerEndpoint, opts)
+	if err != nil {
+		panic(err)
 	}
-	wg.Done()
+
+	err = http.ListenAndServe(":8081", mux)
+	if err != nil {
+		panic(err)
+	}
 }
