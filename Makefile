@@ -47,3 +47,10 @@ generate_proto_wsl:
     GOBIN=$(LOCAL_BIN) go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
     GOBIN=$(LOCAL_BIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
     GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+
+
+DBSTRING:="postgres://mish:mish@localhost:5432/reasonstorage?sslmode=disable"
+.PHONY: goose-migrate
+goose-migrate:
+	GOOSE_DRIVER=postgres GOOSE_DBSTRING=$(DBSTRING) goose -dir migrations status
+	GOOSE_DRIVER=postgres GOOSE_DBSTRING=$(DBSTRING) goose -dir migrations up
