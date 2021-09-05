@@ -7,7 +7,12 @@ import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 
 service ReasonRpc {
-  rpc CreateReason (CreateReasonRequest) returns (CreateReasonResponse);
+  rpc CreateReason (CreateReasonRequest) returns (CreateReasonResponse){
+    option (google.api.http) = {
+      post: "/reasons"
+      body: "*"
+    };
+  }
   rpc DescribeReason (DescribeReasonRequest) returns (DescribeReasonResponse);
   rpc ListReasons (google.protobuf.Empty) returns (ListReasonsResponse){
     option (google.api.http) = {

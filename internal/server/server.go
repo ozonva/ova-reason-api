@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"github.com/ozonva/ova-reason-api/internal/model"
 	"github.com/ozonva/ova-reason-api/internal/repo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -31,7 +32,14 @@ func NewReasonRpcServer(repo *repo.Repo) api.ReasonRpcServer {
 
 func (s *ReasonServer) CreateReason(context context.Context, request *api.CreateReasonRequest) (*api.CreateReasonResponse, error) {
 	s.logger.Info().Msgf("CreateReason request: %v", request)
-	return s.UnimplementedReasonRpcServer.CreateReason(context, request)
+
+	newReason := model.New(request.UserId, 0, request.ActionId, request.Why)
+	lastId, err := s.reasonRepo.AddEntity(*newReason)
+
+	return &api.CreateReasonResponse{
+		Id: uint64(lastId),
+	}, err
+
 }
 
 func (s *ReasonServer) DescribeReason(context context.Context, request *api.DescribeReasonRequest) (*api.DescribeReasonResponse, error) {
