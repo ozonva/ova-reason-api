@@ -2,36 +2,65 @@ package main
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"log"
+
+	_ "github.com/jackc/pgx/stdlib"
+	"github.com/joho/godotenv"
 	"github.com/ozonva/ova-reason-api/internal/server"
 	api "github.com/ozonva/ova-reason-api/pkg/ova-reason-api"
-	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 	"net"
 	"net/http"
 	"os"
-	"time"
 )
 
 const (
 	grpcPort           = ":8080"
 	grpcServerEndpoint = "localhost:8080"
+	gatewayPort        = ":8081"
 )
 
 func main() {
 
 	go runJSON()
-	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
-	log := zerolog.New(output).With().Timestamp().Logger()
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	dsn := fmt.Sprintf(
+		"postgres://%s:%s@localhost:5432/%s?sslmode=disable",
+		os.Getenv("POSTGRES_USER"),
+		os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_DB"),
+	)
+	fmt.Println(dsn)
+	db, err := sql.Open("pgx", dsn) // *sql.DB
+	if err != nil {
+		log.Fatalf("failed to load driver: %v", err)
+	}
+	defer db.Close()
+
+	ctx := context.Background()
+	err = db.PingContext(ctx)
+	if err != nil {
+		log.Fatalf("failed to connect to db: %v", err)
+	}
+	// работаем с db
+
 	listen, err := net.Listen("tcp", grpcPort)
 	if err != nil {
-		log.Fatal().Msgf("failed to listen: %v", err)
+		log.Fatalf("failed to listen: %v", err)
 	}
 
 	s := grpc.NewServer()
-	api.RegisterReasonRpcServer(s, server.NewReasonRpcServer(&log))
+	api.RegisterReasonRpcServer(s, server.NewReasonRpcServer(nil))
 	if err := s.Serve(listen); err != nil {
-		log.Fatal().Msgf("failed to serve: %v", err)
+		log.Fatalf("failed to serve: %v", err)
 	}
 
 }
@@ -49,8 +78,21 @@ func runJSON() {
 		panic(err)
 	}
 
-	err = http.ListenAndServe(":8081", mux)
+	err = http.ListenAndServe(gatewayPort, mux)
 	if err != nil {
 		panic(err)
 	}
 }
+
+/*func run(dbConn *sqlx.DB) error {
+listen, err := net.Listen("tcp", grpcPort)
+if err != nil {
+	log.Fatalf("failed to listen: %v", err)
+}
+
+s := grpc.NewServer()
+desc.RegisterApiServer(s, api.NewApiServer(repo.NewRepo(dbConn)))
+
+if err := s.Serve(listen); err != nil {
+	log.Fatalf("failed to serve: %v", err)
+}*/
