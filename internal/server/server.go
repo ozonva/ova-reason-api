@@ -44,7 +44,14 @@ func (s *ReasonServer) CreateReason(context context.Context, request *api.Create
 
 func (s *ReasonServer) DescribeReason(context context.Context, request *api.DescribeReasonRequest) (*api.DescribeReasonResponse, error) {
 	s.logger.Info().Msgf("DescribeReason request: %v", request)
-	return s.UnimplementedReasonRpcServer.DescribeReason(context, request)
+	result, err := s.reasonRepo.DescribeEntity(request.Id)
+	if err != nil {
+		return nil, err
+	}
+	reason := mapToApiModel(result)
+	return &api.DescribeReasonResponse{
+		Reason: &reason,
+	}, err
 }
 
 func (s *ReasonServer) ListReasons(context context.Context, empty *emptypb.Empty) (*api.ListReasonsResponse, error) {
@@ -58,12 +65,8 @@ func (s *ReasonServer) ListReasons(context context.Context, empty *emptypb.Empty
 
 	list := make([]*api.Reason, 0)
 	for _, v := range result {
-		list = append(list, &api.Reason{
-			Id:       v.Id,
-			ActionId: v.ActionId,
-			UserId:   v.UserId,
-			Why:      v.Why,
-		})
+		reason := mapToApiModel(&v)
+		list = append(list, &reason)
 	}
 
 	return &api.ListReasonsResponse{
@@ -73,5 +76,15 @@ func (s *ReasonServer) ListReasons(context context.Context, empty *emptypb.Empty
 
 func (s *ReasonServer) RemoveReason(context context.Context, request *api.RemoveReasonRequest) (*emptypb.Empty, error) {
 	s.logger.Info().Msgf("RemoveReason request: %v", request)
-	return s.UnimplementedReasonRpcServer.RemoveReason(context, request)
+	err := s.reasonRepo.RemoveEntity(request.Id)
+	return &emptypb.Empty{}, err
+}
+
+func mapToApiModel(v *model.Reason) api.Reason {
+	return api.Reason{
+		Id:       v.Id,
+		ActionId: v.ActionId,
+		UserId:   v.UserId,
+		Why:      v.Why,
+	}
 }

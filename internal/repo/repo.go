@@ -49,11 +49,21 @@ func (r *ReasonRepository) ListEntities(limit, offset uint64) ([]model.Reason, e
 }
 
 func (r ReasonRepository) DescribeEntity(entityId uint64) (*model.Reason, error) {
-	panic("implement me")
+	var reason model.Reason
+	err := r.db.Get(&reason, "select * from reasons where id = $1 ", entityId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &reason, nil
 }
 
 func (r ReasonRepository) RemoveEntity(entityId uint64) error {
-	panic("implement me")
+	_, err := r.db.NamedExec(`delete from reasons where id = :id`,
+		map[string]interface{}{
+			"id": entityId,
+		})
+	return err
 }
 
 func NewReasonRepository(db *sqlx.DB) Repo {
