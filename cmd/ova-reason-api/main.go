@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/jmoiron/sqlx"
+	"github.com/ozonva/ova-reason-api/internal/repo"
 	"log"
 
 	_ "github.com/jackc/pgx/stdlib"
@@ -38,8 +39,8 @@ func main() {
 		os.Getenv("POSTGRES_PASSWORD"),
 		os.Getenv("POSTGRES_DB"),
 	)
-	fmt.Println(dsn)
-	db, err := sql.Open("pgx", dsn) // *sql.DB
+
+	db, err := sqlx.Open("pgx", dsn) // *sql.DB
 	if err != nil {
 		log.Fatalf("failed to load driver: %v", err)
 	}
@@ -58,7 +59,8 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	api.RegisterReasonRpcServer(s, server.NewReasonRpcServer(nil))
+	repo := repo.NewReasonRepository(db)
+	api.RegisterReasonRpcServer(s, server.NewReasonRpcServer(&repo))
 	if err := s.Serve(listen); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
@@ -83,16 +85,3 @@ func runJSON() {
 		panic(err)
 	}
 }
-
-/*func run(dbConn *sqlx.DB) error {
-listen, err := net.Listen("tcp", grpcPort)
-if err != nil {
-	log.Fatalf("failed to listen: %v", err)
-}
-
-s := grpc.NewServer()
-desc.RegisterApiServer(s, api.NewApiServer(repo.NewRepo(dbConn)))
-
-if err := s.Serve(listen); err != nil {
-	log.Fatalf("failed to serve: %v", err)
-}*/

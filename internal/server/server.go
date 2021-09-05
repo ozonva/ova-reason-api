@@ -2,6 +2,11 @@ package server
 
 import (
 	"context"
+	"github.com/ozonva/ova-reason-api/internal/repo"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"os"
+	"time"
 
 	api "github.com/ozonva/ova-reason-api/pkg/ova-reason-api"
 	"github.com/rs/zerolog"
@@ -10,13 +15,17 @@ import (
 
 type ReasonServer struct {
 	api.UnimplementedReasonRpcServer
-	logger *zerolog.Logger
+	logger     *zerolog.Logger
+	reasonRepo repo.Repo
 }
 
-func NewReasonRpcServer(logger *zerolog.Logger) api.ReasonRpcServer {
+func NewReasonRpcServer(repo *repo.Repo) api.ReasonRpcServer {
+	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
+	zLogger := zerolog.New(output).With().Timestamp().Logger()
 	return &ReasonServer{
 		UnimplementedReasonRpcServer: api.UnimplementedReasonRpcServer{},
-		logger:                       logger,
+		logger:                       &zLogger,
+		reasonRepo:                   *repo,
 	}
 }
 
@@ -32,7 +41,26 @@ func (s *ReasonServer) DescribeReason(context context.Context, request *api.Desc
 
 func (s *ReasonServer) ListReasons(context context.Context, empty *emptypb.Empty) (*api.ListReasonsResponse, error) {
 	s.logger.Info().Msgf("ListReasons request: %v", empty)
-	return s.UnimplementedReasonRpcServer.ListReasons(context, empty)
+
+	result, err := s.reasonRepo.ListEntities(100, 0)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("")
+		return nil, status.Error(codes.Internal, "Internal")
+	}
+
+	list := make([]*api.Reason, 0)
+	for _, v := range result {
+		list = append(list, &api.Reason{
+			Id:       v.Id,
+			ActionId: v.ActionId,
+			UserId:   v.UserId,
+			Why:      v.Why,
+		})
+	}
+
+	return &api.ListReasonsResponse{
+		Items: list,
+	}, nil
 }
 
 func (s *ReasonServer) RemoveReason(context context.Context, request *api.RemoveReasonRequest) (*emptypb.Empty, error) {

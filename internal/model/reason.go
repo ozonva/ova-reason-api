@@ -5,10 +5,10 @@ import (
 )
 
 type Reason struct {
-	Id       uint64
-	UserId   uint64
-	ActionId uint64
-	Why      string
+	Id       uint64 `db:"id"`
+	UserId   uint64 `db:"user_id"`
+	ActionId uint64 `db:"action_id"`
+	Why      string `db:"why"`
 }
 
 func New(userId uint64, reasonId uint64, actionId uint64, why string) *Reason {
