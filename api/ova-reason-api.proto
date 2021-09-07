@@ -13,6 +13,12 @@ service ReasonRpc {
       body: "*"
     };
   }
+  rpc BulkCreateReasons (BulkCreateReasonRequest) returns (BulkCreateReasonResponse){
+    option (google.api.http) = {
+      post: "/reasons/bulk"
+      body: "*"
+    };
+  }
   rpc ReplaceReason (ReplaceReasonRequest) returns (ReplaceReasonResponse){
     option (google.api.http) = {
       put: "/reasons/{id}"
@@ -34,6 +40,13 @@ service ReasonRpc {
       delete: "/reasons/{id}"
     };
   }
+}
+
+message BulkCreateReasonRequest {
+  repeated CreateReasonRequest reasons = 1;
+}
+
+message BulkCreateReasonResponse {
 }
 
 message CreateReasonRequest {

@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ReasonRpcClient interface {
 	CreateReason(ctx context.Context, in *CreateReasonRequest, opts ...grpc.CallOption) (*CreateReasonResponse, error)
+	BulkCreateReasons(ctx context.Context, in *BulkCreateReasonRequest, opts ...grpc.CallOption) (*BulkCreateReasonResponse, error)
 	ReplaceReason(ctx context.Context, in *ReplaceReasonRequest, opts ...grpc.CallOption) (*ReplaceReasonResponse, error)
 	DescribeReason(ctx context.Context, in *DescribeReasonRequest, opts ...grpc.CallOption) (*DescribeReasonResponse, error)
 	ListReasons(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListReasonsResponse, error)
@@ -37,6 +38,15 @@ func NewReasonRpcClient(cc grpc.ClientConnInterface) ReasonRpcClient {
 func (c *reasonRpcClient) CreateReason(ctx context.Context, in *CreateReasonRequest, opts ...grpc.CallOption) (*CreateReasonResponse, error) {
 	out := new(CreateReasonResponse)
 	err := c.cc.Invoke(ctx, "/ova.reason.api.ReasonRpc/CreateReason", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reasonRpcClient) BulkCreateReasons(ctx context.Context, in *BulkCreateReasonRequest, opts ...grpc.CallOption) (*BulkCreateReasonResponse, error) {
+	out := new(BulkCreateReasonResponse)
+	err := c.cc.Invoke(ctx, "/ova.reason.api.ReasonRpc/BulkCreateReasons", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -84,6 +94,7 @@ func (c *reasonRpcClient) RemoveReason(ctx context.Context, in *RemoveReasonRequ
 // for forward compatibility
 type ReasonRpcServer interface {
 	CreateReason(context.Context, *CreateReasonRequest) (*CreateReasonResponse, error)
+	BulkCreateReasons(context.Context, *BulkCreateReasonRequest) (*BulkCreateReasonResponse, error)
 	ReplaceReason(context.Context, *ReplaceReasonRequest) (*ReplaceReasonResponse, error)
 	DescribeReason(context.Context, *DescribeReasonRequest) (*DescribeReasonResponse, error)
 	ListReasons(context.Context, *empty.Empty) (*ListReasonsResponse, error)
@@ -97,6 +108,9 @@ type UnimplementedReasonRpcServer struct {
 
 func (UnimplementedReasonRpcServer) CreateReason(context.Context, *CreateReasonRequest) (*CreateReasonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateReason not implemented")
+}
+func (UnimplementedReasonRpcServer) BulkCreateReasons(context.Context, *BulkCreateReasonRequest) (*BulkCreateReasonResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BulkCreateReasons not implemented")
 }
 func (UnimplementedReasonRpcServer) ReplaceReason(context.Context, *ReplaceReasonRequest) (*ReplaceReasonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReplaceReason not implemented")
@@ -137,6 +151,24 @@ func _ReasonRpc_CreateReason_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ReasonRpcServer).CreateReason(ctx, req.(*CreateReasonRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ReasonRpc_BulkCreateReasons_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BulkCreateReasonRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReasonRpcServer).BulkCreateReasons(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ova.reason.api.ReasonRpc/BulkCreateReasons",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReasonRpcServer).BulkCreateReasons(ctx, req.(*BulkCreateReasonRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -223,6 +255,10 @@ var ReasonRpc_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateReason",
 			Handler:    _ReasonRpc_CreateReason_Handler,
+		},
+		{
+			MethodName: "BulkCreateReasons",
+			Handler:    _ReasonRpc_BulkCreateReasons_Handler,
 		},
 		{
 			MethodName: "ReplaceReason",

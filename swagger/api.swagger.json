@@ -63,6 +63,38 @@
         ]
       }
     },
+    "/reasons/bulk": {
+      "post": {
+        "operationId": "ReasonRpc_BulkCreateReasons",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiBulkCreateReasonResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiBulkCreateReasonRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ReasonRpc"
+        ]
+      }
+    },
     "/reasons/{id}": {
       "get": {
         "operationId": "ReasonRpc_DescribeReason",
@@ -162,6 +194,20 @@
     }
   },
   "definitions": {
+    "apiBulkCreateReasonRequest": {
+      "type": "object",
+      "properties": {
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiCreateReasonRequest"
+          }
+        }
+      }
+    },
+    "apiBulkCreateReasonResponse": {
+      "type": "object"
+    },
     "apiCreateReasonRequest": {
       "type": "object",
       "properties": {

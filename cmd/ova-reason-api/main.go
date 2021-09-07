@@ -47,9 +47,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	span := tracer.StartSpan("Init")
-	span.Finish()
 	defer closer.Close()
 
 	go runJSON()

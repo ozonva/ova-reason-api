@@ -5,6 +5,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/ozonva/ova-reason-api/internal/model"
 	"github.com/ozonva/ova-reason-api/internal/repo"
+	"github.com/ozonva/ova-reason-api/internal/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"os"
@@ -33,7 +34,7 @@ func NewReasonRpcServer(repo *repo.Repo) api.ReasonRpcServer {
 
 func (s *ReasonServer) CreateReason(context context.Context, request *api.CreateReasonRequest) (*api.CreateReasonResponse, error) {
 	s.logger.Info().Msgf("CreateReason request: %v", request)
-	span, _ := opentracing.StartSpanFromContext(context, "CreateReason")
+	span, context := opentracing.StartSpanFromContext(context, "CreateReason")
 	defer span.Finish()
 
 	newReason := model.New(request.UserId, 0, request.ActionId, request.Why)
@@ -42,12 +43,34 @@ func (s *ReasonServer) CreateReason(context context.Context, request *api.Create
 	return &api.CreateReasonResponse{
 		Id: uint64(lastId),
 	}, err
+}
 
+func (s *ReasonServer) BulkCreateReasons(context context.Context, request *api.BulkCreateReasonRequest) (*api.BulkCreateReasonResponse, error) {
+	s.logger.Info().Msgf("BulkCreateReasons request: %v", request)
+	span, context := opentracing.StartSpanFromContext(context, "BulkCreateReasons")
+	defer span.Finish()
+
+	reasons := make([]model.Reason, 0, len(request.Reasons))
+
+	for _, requestReason := range request.Reasons {
+		reasons = append(reasons, *model.New(requestReason.UserId, 0, requestReason.ActionId, requestReason.Why))
+	}
+
+	bulks := utils.SplitToBulks(reasons, 2)
+
+	for _, bulk := range bulks {
+		err := s.reasonRepo.BulkCreate(context, bulk)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &api.BulkCreateReasonResponse{}, nil
 }
 
 func (s *ReasonServer) DescribeReason(context context.Context, request *api.DescribeReasonRequest) (*api.DescribeReasonResponse, error) {
 	s.logger.Info().Msgf("DescribeReason request: %v", request)
-	span, _ := opentracing.StartSpanFromContext(context, "DescribeReason")
+	span, context := opentracing.StartSpanFromContext(context, "DescribeReason")
 	defer span.Finish()
 
 	result, err := s.reasonRepo.DescribeEntity(request.Id)
@@ -63,9 +86,7 @@ func (s *ReasonServer) DescribeReason(context context.Context, request *api.Desc
 func (s *ReasonServer) ListReasons(context context.Context, empty *emptypb.Empty) (*api.ListReasonsResponse, error) {
 	s.logger.Info().Msgf("ListReasons request: %v", empty)
 
-	tracer := opentracing.GlobalTracer()
-
-	span := tracer.StartSpan("ListReasons")
+	span, context := opentracing.StartSpanFromContext(context, "ListReasons")
 	defer span.Finish()
 
 	result, err := s.reasonRepo.ListEntities(100, 0)
@@ -87,7 +108,7 @@ func (s *ReasonServer) ListReasons(context context.Context, empty *emptypb.Empty
 
 func (s *ReasonServer) RemoveReason(context context.Context, request *api.RemoveReasonRequest) (*api.RemoveReasonResponse, error) {
 	s.logger.Info().Msgf("RemoveReason request: %v", request)
-	span, _ := opentracing.StartSpanFromContext(context, "RemoveReason")
+	span, context := opentracing.StartSpanFromContext(context, "RemoveReason")
 	defer span.Finish()
 
 	err := s.reasonRepo.RemoveEntity(request.Id)
@@ -96,7 +117,7 @@ func (s *ReasonServer) RemoveReason(context context.Context, request *api.Remove
 
 func (s *ReasonServer) ReplaceReason(context context.Context, request *api.ReplaceReasonRequest) (*api.ReplaceReasonResponse, error) {
 	s.logger.Info().Msgf("ReplaceReason request: %v", request)
-	span, _ := opentracing.StartSpanFromContext(context, "RemoveReason")
+	span, context := opentracing.StartSpanFromContext(context, "RemoveReason")
 	defer span.Finish()
 
 	reason := model.New(request.UserId, 0, request.ActionId, request.Why)
