@@ -13,6 +13,12 @@ service ReasonRpc {
       body: "*"
     };
   }
+  rpc ReplaceReason (ReplaceReasonRequest) returns (ReplaceReasonResponse){
+    option (google.api.http) = {
+      put: "/reasons/{id}"
+      body: "*"
+    };
+  }
   rpc DescribeReason (DescribeReasonRequest) returns (DescribeReasonResponse){
     option (google.api.http) = {
       get: "/reasons/{id}"
@@ -23,7 +29,7 @@ service ReasonRpc {
       get: "/reasons"
     };
   }
-  rpc RemoveReason (RemoveReasonRequest) returns (google.protobuf.Empty){
+  rpc RemoveReason (RemoveReasonRequest) returns (RemoveReasonResponse){
     option (google.api.http) = {
       delete: "/reasons/{id}"
     };
@@ -40,6 +46,16 @@ message CreateReasonResponse {
   uint64 id = 1;
 }
 
+message ReplaceReasonRequest {
+  uint64 id = 1;
+  uint64 userId = 2;
+  uint64 actionId = 3;
+  string why = 4;
+}
+
+message ReplaceReasonResponse {
+}
+
 message DescribeReasonRequest {
   uint64 id = 1;
 }
@@ -50,6 +66,9 @@ message DescribeReasonResponse {
 
 message RemoveReasonRequest {
   uint64 id = 1;
+}
+
+message RemoveReasonResponse {
 }
 
 message ListReasonsResponse {

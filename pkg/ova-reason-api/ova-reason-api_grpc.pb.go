@@ -20,9 +20,10 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ReasonRpcClient interface {
 	CreateReason(ctx context.Context, in *CreateReasonRequest, opts ...grpc.CallOption) (*CreateReasonResponse, error)
+	ReplaceReason(ctx context.Context, in *ReplaceReasonRequest, opts ...grpc.CallOption) (*ReplaceReasonResponse, error)
 	DescribeReason(ctx context.Context, in *DescribeReasonRequest, opts ...grpc.CallOption) (*DescribeReasonResponse, error)
 	ListReasons(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListReasonsResponse, error)
-	RemoveReason(ctx context.Context, in *RemoveReasonRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	RemoveReason(ctx context.Context, in *RemoveReasonRequest, opts ...grpc.CallOption) (*RemoveReasonResponse, error)
 }
 
 type reasonRpcClient struct {
@@ -36,6 +37,15 @@ func NewReasonRpcClient(cc grpc.ClientConnInterface) ReasonRpcClient {
 func (c *reasonRpcClient) CreateReason(ctx context.Context, in *CreateReasonRequest, opts ...grpc.CallOption) (*CreateReasonResponse, error) {
 	out := new(CreateReasonResponse)
 	err := c.cc.Invoke(ctx, "/ova.reason.api.ReasonRpc/CreateReason", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reasonRpcClient) ReplaceReason(ctx context.Context, in *ReplaceReasonRequest, opts ...grpc.CallOption) (*ReplaceReasonResponse, error) {
+	out := new(ReplaceReasonResponse)
+	err := c.cc.Invoke(ctx, "/ova.reason.api.ReasonRpc/ReplaceReason", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -60,8 +70,8 @@ func (c *reasonRpcClient) ListReasons(ctx context.Context, in *empty.Empty, opts
 	return out, nil
 }
 
-func (c *reasonRpcClient) RemoveReason(ctx context.Context, in *RemoveReasonRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *reasonRpcClient) RemoveReason(ctx context.Context, in *RemoveReasonRequest, opts ...grpc.CallOption) (*RemoveReasonResponse, error) {
+	out := new(RemoveReasonResponse)
 	err := c.cc.Invoke(ctx, "/ova.reason.api.ReasonRpc/RemoveReason", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -74,9 +84,10 @@ func (c *reasonRpcClient) RemoveReason(ctx context.Context, in *RemoveReasonRequ
 // for forward compatibility
 type ReasonRpcServer interface {
 	CreateReason(context.Context, *CreateReasonRequest) (*CreateReasonResponse, error)
+	ReplaceReason(context.Context, *ReplaceReasonRequest) (*ReplaceReasonResponse, error)
 	DescribeReason(context.Context, *DescribeReasonRequest) (*DescribeReasonResponse, error)
 	ListReasons(context.Context, *empty.Empty) (*ListReasonsResponse, error)
-	RemoveReason(context.Context, *RemoveReasonRequest) (*empty.Empty, error)
+	RemoveReason(context.Context, *RemoveReasonRequest) (*RemoveReasonResponse, error)
 	mustEmbedUnimplementedReasonRpcServer()
 }
 
@@ -87,13 +98,16 @@ type UnimplementedReasonRpcServer struct {
 func (UnimplementedReasonRpcServer) CreateReason(context.Context, *CreateReasonRequest) (*CreateReasonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateReason not implemented")
 }
+func (UnimplementedReasonRpcServer) ReplaceReason(context.Context, *ReplaceReasonRequest) (*ReplaceReasonResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReplaceReason not implemented")
+}
 func (UnimplementedReasonRpcServer) DescribeReason(context.Context, *DescribeReasonRequest) (*DescribeReasonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DescribeReason not implemented")
 }
 func (UnimplementedReasonRpcServer) ListReasons(context.Context, *empty.Empty) (*ListReasonsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListReasons not implemented")
 }
-func (UnimplementedReasonRpcServer) RemoveReason(context.Context, *RemoveReasonRequest) (*empty.Empty, error) {
+func (UnimplementedReasonRpcServer) RemoveReason(context.Context, *RemoveReasonRequest) (*RemoveReasonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveReason not implemented")
 }
 func (UnimplementedReasonRpcServer) mustEmbedUnimplementedReasonRpcServer() {}
@@ -123,6 +137,24 @@ func _ReasonRpc_CreateReason_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ReasonRpcServer).CreateReason(ctx, req.(*CreateReasonRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ReasonRpc_ReplaceReason_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReplaceReasonRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReasonRpcServer).ReplaceReason(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ova.reason.api.ReasonRpc/ReplaceReason",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReasonRpcServer).ReplaceReason(ctx, req.(*ReplaceReasonRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -191,6 +223,10 @@ var ReasonRpc_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateReason",
 			Handler:    _ReasonRpc_CreateReason_Handler,
+		},
+		{
+			MethodName: "ReplaceReason",
+			Handler:    _ReasonRpc_ReplaceReason_Handler,
 		},
 		{
 			MethodName: "DescribeReason",

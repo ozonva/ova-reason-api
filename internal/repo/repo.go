@@ -14,10 +14,23 @@ type Repo interface {
 	ListEntities(limit, offset uint64) ([]model.Reason, error)
 	DescribeEntity(entityId uint64) (*model.Reason, error)
 	RemoveEntity(entityId uint64) error
+	ReplaceEntity(entityId uint64, entities model.Reason) error
 }
 
 type ReasonRepository struct {
 	db *sqlx.DB
+}
+
+func (r ReasonRepository) ReplaceEntity(entityId uint64, entity model.Reason) error {
+	_, err := r.db.NamedExec(`UPDATE reasons Set (user_id, action_id, why) = (:userId,:actionId,:why) where id = :id `,
+		map[string]interface{}{
+			"userId":   entity.UserId,
+			"actionId": entity.ActionId,
+			"why":      entity.Why,
+			"id":       entityId,
+		})
+
+	return err
 }
 
 func (r ReasonRepository) AddEntity(entity model.Reason) (int64, error) {
