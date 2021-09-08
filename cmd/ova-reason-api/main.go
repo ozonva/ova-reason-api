@@ -5,13 +5,18 @@ import (
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/jmoiron/sqlx"
+	"github.com/ozonva/ova-reason-api/internal/reasonEventProducer"
 	"github.com/ozonva/ova-reason-api/internal/repo"
+	"github.com/uber/jaeger-client-go"
 	"log"
 
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/joho/godotenv"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/ozonva/ova-reason-api/internal/server"
 	api "github.com/ozonva/ova-reason-api/pkg/ova-reason-api"
+	jaegercfg "github.com/uber/jaeger-client-go/config"
+	jaegerlog "github.com/uber/jaeger-client-go/log"
 	"google.golang.org/grpc"
 	"net"
 	"net/http"
@@ -25,10 +30,27 @@ const (
 )
 
 func main() {
+	cfg := jaegercfg.Configuration{
+		ServiceName: "ova-reason-api",
+		Sampler: &jaegercfg.SamplerConfig{
+			Type:  jaeger.SamplerTypeConst,
+			Param: 1,
+		},
+		Reporter: &jaegercfg.ReporterConfig{
+			LogSpans: true,
+		},
+	}
+
+	tracer, closer, err := cfg.NewTracer(jaegercfg.Logger(jaegerlog.StdLogger))
+	opentracing.SetGlobalTracer(tracer)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer closer.Close()
 
 	go runJSON()
 
-	err := godotenv.Load()
+	err = godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
@@ -40,7 +62,7 @@ func main() {
 		os.Getenv("POSTGRES_DB"),
 	)
 
-	db, err := sqlx.Open("pgx", dsn) // *sql.DB
+	db, err := sqlx.Open("pgx", dsn)
 	if err != nil {
 		log.Fatalf("failed to load driver: %v", err)
 	}
@@ -51,16 +73,20 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect to db: %v", err)
 	}
-	// работаем с db
 
 	listen, err := net.Listen("tcp", grpcPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	producer, err := reasonEventProducer.NewProducer(ctx, reasonEventProducer.ProducerConfig{
+		Host: os.Getenv("KAFKA_HOST"),
+		Port: os.Getenv("KAFKA_PORT"),
+	})
+
 	s := grpc.NewServer()
 	repo := repo.NewReasonRepository(db)
-	api.RegisterReasonRpcServer(s, server.NewReasonRpcServer(&repo))
+	api.RegisterReasonRpcServer(s, server.NewReasonRpcServer(&repo, &producer))
 	if err := s.Serve(listen); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
