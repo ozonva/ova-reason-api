@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/jmoiron/sqlx"
+	"github.com/ozonva/ova-reason-api/internal/reasonEventProducer"
 	"github.com/ozonva/ova-reason-api/internal/repo"
 	"github.com/uber/jaeger-client-go"
 	"log"
@@ -74,12 +75,24 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect to db: %v", err)
 	}
-	// работаем с db
 
 	listen, err := net.Listen("tcp", grpcPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
+	done := make(chan bool)
+	producer, err := reasonEventProducer.NewProducer(done, reasonEventProducer.ProducerConfig{
+		Host: os.Getenv("KAFKA_HOST"),
+		Port: os.Getenv("KAFKA_PORT"),
+	})
+
+	event := reasonEventProducer.Event{
+		Id:        "1",
+		Operation: "Create",
+		Body:      "123",
+	}
+	producer.Publish(event)
 
 	s := grpc.NewServer()
 	repo := repo.NewReasonRepository(db)
@@ -87,6 +100,7 @@ func main() {
 	if err := s.Serve(listen); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+
 }
 
 func runJSON() {
