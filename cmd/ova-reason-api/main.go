@@ -30,8 +30,6 @@ const (
 )
 
 func main() {
-	// Sample configuration for testing. Use constant sampling to sample every trace
-	// and enable LogSpan to log every span via configured Logger.
 	cfg := jaegercfg.Configuration{
 		ServiceName: "ova-reason-api",
 		Sampler: &jaegercfg.SamplerConfig{
@@ -64,7 +62,7 @@ func main() {
 		os.Getenv("POSTGRES_DB"),
 	)
 
-	db, err := sqlx.Open("pgx", dsn) // *sql.DB
+	db, err := sqlx.Open("pgx", dsn)
 	if err != nil {
 		log.Fatalf("failed to load driver: %v", err)
 	}
@@ -81,22 +79,14 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	done := make(chan bool)
-	producer, err := reasonEventProducer.NewProducer(done, reasonEventProducer.ProducerConfig{
+	producer, err := reasonEventProducer.NewProducer(ctx, reasonEventProducer.ProducerConfig{
 		Host: os.Getenv("KAFKA_HOST"),
 		Port: os.Getenv("KAFKA_PORT"),
 	})
 
-	event := reasonEventProducer.Event{
-		Id:        "1",
-		Operation: "Create",
-		Body:      "123",
-	}
-	producer.Publish(event)
-
 	s := grpc.NewServer()
 	repo := repo.NewReasonRepository(db)
-	api.RegisterReasonRpcServer(s, server.NewReasonRpcServer(&repo))
+	api.RegisterReasonRpcServer(s, server.NewReasonRpcServer(&repo, &producer))
 	if err := s.Serve(listen); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

@@ -4,11 +4,13 @@ import (
 	"context"
 	"github.com/opentracing/opentracing-go"
 	"github.com/ozonva/ova-reason-api/internal/model"
+	"github.com/ozonva/ova-reason-api/internal/reasonEventProducer"
 	"github.com/ozonva/ova-reason-api/internal/repo"
 	"github.com/ozonva/ova-reason-api/internal/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"os"
+	"strconv"
 	"time"
 
 	api "github.com/ozonva/ova-reason-api/pkg/ova-reason-api"
@@ -20,15 +22,17 @@ type ReasonServer struct {
 	api.UnimplementedReasonRpcServer
 	logger     *zerolog.Logger
 	reasonRepo repo.Repo
+	producer   *reasonEventProducer.Producer
 }
 
-func NewReasonRpcServer(repo *repo.Repo) api.ReasonRpcServer {
+func NewReasonRpcServer(repo *repo.Repo, producer *reasonEventProducer.Producer) api.ReasonRpcServer {
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	zLogger := zerolog.New(output).With().Timestamp().Logger()
 	return &ReasonServer{
 		UnimplementedReasonRpcServer: api.UnimplementedReasonRpcServer{},
 		logger:                       &zLogger,
 		reasonRepo:                   *repo,
+		producer:                     producer,
 	}
 }
 
@@ -39,6 +43,14 @@ func (s *ReasonServer) CreateReason(context context.Context, request *api.Create
 
 	newReason := model.New(request.UserId, 0, request.ActionId, request.Why)
 	lastId, err := s.reasonRepo.AddEntity(*newReason)
+
+	if err == nil {
+		(*s.producer).Publish(reasonEventProducer.Event{
+			Id:        strconv.FormatInt(lastId, 10),
+			Operation: "Create",
+			Body:      newReason.String(),
+		})
+	}
 
 	return &api.CreateReasonResponse{
 		Id: uint64(lastId),
@@ -112,6 +124,13 @@ func (s *ReasonServer) RemoveReason(context context.Context, request *api.Remove
 	defer span.Finish()
 
 	err := s.reasonRepo.RemoveEntity(request.Id)
+	if err == nil {
+		(*s.producer).Publish(reasonEventProducer.Event{
+			Id:        strconv.FormatUint(request.Id, 10),
+			Operation: "Delete",
+			Body:      "",
+		})
+	}
 	return &api.RemoveReasonResponse{}, err
 }
 
@@ -122,6 +141,14 @@ func (s *ReasonServer) ReplaceReason(context context.Context, request *api.Repla
 
 	reason := model.New(request.UserId, 0, request.ActionId, request.Why)
 	err := s.reasonRepo.ReplaceEntity(request.Id, *reason)
+
+	if err == nil {
+		(*s.producer).Publish(reasonEventProducer.Event{
+			Id:        strconv.FormatUint(request.Id, 10),
+			Operation: "Update",
+			Body:      reason.String(),
+		})
+	}
 	return &api.ReplaceReasonResponse{}, err
 }
 

@@ -1,6 +1,7 @@
 package reasonEventProducer
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -28,18 +29,18 @@ type ProducerConfig struct {
 }
 
 type ReasonEventProducer struct {
-	done     <-chan bool
+	ctx      context.Context
 	logger   *zerolog.Logger
 	config   ProducerConfig
 	messages chan *sarama.ProducerMessage
 	producer sarama.SyncProducer
 }
 
-func NewProducer(done <-chan bool, config ProducerConfig) (Producer, error) {
+func NewProducer(ctx context.Context, config ProducerConfig) (Producer, error) {
 	output := zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	zLogger := zerolog.New(output).With().Timestamp().Logger()
 	producer := ReasonEventProducer{
-		done:     done,
+		ctx:      ctx,
 		logger:   &zLogger,
 		config:   config,
 		messages: make(chan *sarama.ProducerMessage, 5),
@@ -90,7 +91,7 @@ func (p *ReasonEventProducer) init() error {
 					p.logger.Err(err).Msgf("Failed to produce message: %s", err.Error())
 				}
 				fmt.Printf("Message is stored in topic(%s)/partition(%d)/offset(%d)\n", msg.Topic, partition, offset)
-			case <-p.done:
+			case <-p.ctx.Done():
 				return
 			}
 		}
