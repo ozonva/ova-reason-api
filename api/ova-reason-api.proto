@@ -7,14 +7,27 @@ import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 
 service ReasonRpc {
-  rpc CreateReason (CreateReasonRequest) returns (CreateReasonResponse);
-  rpc DescribeReason (DescribeReasonRequest) returns (DescribeReasonResponse);
+  rpc CreateReason (CreateReasonRequest) returns (CreateReasonResponse){
+    option (google.api.http) = {
+      post: "/reasons"
+      body: "*"
+    };
+  }
+  rpc DescribeReason (DescribeReasonRequest) returns (DescribeReasonResponse){
+    option (google.api.http) = {
+      get: "/reasons/{id}"
+    };
+  }
   rpc ListReasons (google.protobuf.Empty) returns (ListReasonsResponse){
     option (google.api.http) = {
       get: "/reasons"
     };
   }
-  rpc RemoveReason (RemoveReasonRequest) returns (google.protobuf.Empty);
+  rpc RemoveReason (RemoveReasonRequest) returns (google.protobuf.Empty){
+    option (google.api.http) = {
+      delete: "/reasons/{id}"
+    };
+  }
 }
 
 message CreateReasonRequest {

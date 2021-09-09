@@ -31,10 +31,116 @@
         "tags": [
           "ReasonRpc"
         ]
+      },
+      "post": {
+        "operationId": "ReasonRpc_CreateReason",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiCreateReasonResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiCreateReasonRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ReasonRpc"
+        ]
+      }
+    },
+    "/reasons/{id}": {
+      "get": {
+        "operationId": "ReasonRpc_DescribeReason",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiDescribeReasonResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "ReasonRpc"
+        ]
+      },
+      "delete": {
+        "operationId": "ReasonRpc_RemoveReason",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "properties": {}
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "ReasonRpc"
+        ]
       }
     }
   },
   "definitions": {
+    "apiCreateReasonRequest": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "actionId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "why": {
+          "type": "string"
+        }
+      }
+    },
     "apiCreateReasonResponse": {
       "type": "object",
       "properties": {
